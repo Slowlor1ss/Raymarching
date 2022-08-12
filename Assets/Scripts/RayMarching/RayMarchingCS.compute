@@ -1,0 +1,377 @@
+// Each #kernel tells which function to compile; you can have many kernels
+#pragma kernel CSMain
+
+// Create a RenderTexture with enableRandomWrite flag and set it
+// with cs.SetTexture
+Texture2D<float4> Source;
+RWTexture2D<float4> Result;
+
+float4x4 CameraToWorld;
+float4x4 CameraInverseProjection;
+
+static const float MaxMarchingSteps = 255;
+static const float MaxDst = 100;
+static const float MinDst = 0.00001f;
+static const float Epsilon = 0.0001f;
+static const float ShadowBias = Epsilon * 50;
+
+
+struct ShapeData
+{
+    float3 position;
+    float3 size;
+    float3 colour;
+    int shapeType;
+    int operation;
+    float blendStrength;
+    int numChildren;
+};
+
+StructuredBuffer<ShapeData> Shapes;
+int AmntShapes;
+
+
+struct LightData
+{
+    float3 position;
+    float intensity;
+    float range;
+    float3 colour;
+};
+StructuredBuffer<LightData> Lights;
+int AmntLights;
+
+
+struct Ray
+{
+    float3 origin;
+    float3 direction;
+};
+
+Ray CreateRay(float3 origin, float3 direction)
+{
+    Ray ray;
+    ray.origin = origin;
+    ray.direction = direction;
+    return ray;
+}
+
+Ray CreateCameraRay(float2 uv)
+{
+    //origin in world space
+    float3 origin = mul(CameraToWorld, float4(0, 0, 0, 1)).xyz;
+    //dir in camera space
+    float3 direction = mul(CameraInverseProjection, float4(uv, 0, 1)).xyz;
+    //put dir in world space
+    direction = mul(CameraToWorld, float4(direction, 0)).xyz;
+    direction = normalize(direction);
+    return CreateRay(origin, direction);
+}
+
+
+float SphereDistance(float3 eye, float3 centre, float radius)
+{
+    return distance(eye, centre) - radius;
+}
+
+float CubeDistance(float3 eye, float3 centre, float3 size)
+{
+    float3 o = abs(eye - centre) - size;
+    float ud = length(max(o, 0));
+    float n = max(max(min(o.x, 0), min(o.y, 0)), min(o.z, 0));
+    return ud + n;
+}
+
+//http://iquilezles.org/www/articles/distfunctions/distfunctions.htm
+float TorusDistance(float3 eye, float3 centre, float r1, float r2)
+{
+    float2 q = float2(length((eye - centre).xz) - r1, eye.y - centre.y);
+    return length(q) - r2;
+}
+
+float CylinderDistance(float3 eye, float3 centre, float2 h)
+{
+    float2 d = abs(float2(length((eye - centre).xz), eye.y - centre.y)) - h;
+    return length(max(d, 0.0)) + max(min(d.x, 0), min(d.y, 0));
+}
+
+float4 Blend(float a, float b, float3 colA, float3 colB, float k)
+{
+	//see mix factor https://www.iquilezles.org/www/articles/smin/smin.htm
+	const float h = max(k - abs(a - b), 0.0) / k;
+    const float m = h * h * 0.5;
+    const float s = m * k * (1.0 / 2.0);
+    float2 result = (a < b) ? float2(a - s, m) : float2(b - s, 1.0 - m);
+
+    float blendDst = result.x;
+    float3 blendCol = lerp(colA, colB, result.y);
+
+    return float4(blendCol, blendDst);
+}
+
+float4 Combine(float dstA, float dstB, float3 colourA, float3 colourB, int operation, float blendStrength)
+{
+    float dst = dstA;
+    float3 colour = colourA;
+
+    // None
+    if (operation == 0)
+    {
+        if (dstB < dstA)
+        {
+            dst = dstB;
+            colour = colourB;
+        }
+    }
+    // Blend
+    else if (operation == 1)
+    {
+        float4 blend = Blend(dstA, dstB, colourA, colourB, blendStrength);
+        dst = blend.w;
+        colour = blend.xyz;
+    }
+    // Cut
+    else if (operation == 2)
+    {
+        // max(a,-b)
+        if (-dstB > dst)
+        {
+            dst = -dstB;
+            colour = colourB;
+        }
+    }
+    // Mask
+    else if (operation == 3)
+    {
+        // max(a,b)
+        if (dstB > dst)
+        {
+            dst = dstB;
+            colour = colourB;
+        }
+    }
+
+    return float4(colour, dst);
+}
+
+float GetShapeDistance(ShapeData shape, float3 eye)
+{
+   
+    if (shape.shapeType == 0)
+    {
+        return SphereDistance(eye, shape.position, shape.size.x);
+    }
+    else if (shape.shapeType == 1)
+    {
+        return CubeDistance(eye, shape.position, shape.size);
+    }
+    else if (shape.shapeType == 2)
+    {
+        return TorusDistance(eye, shape.position, shape.size.x, shape.size.y);
+    }
+    else if (shape.shapeType == 3)
+    {
+        return CylinderDistance(eye, shape.position, shape.size.xy);
+    }
+
+    return MaxDst;
+}
+
+float4 SceneSDF(float3 samplePoint)
+{
+    float globalDst = MaxDst;
+    float3 globalColour = 1;
+    
+    for (int i = 0; i < AmntShapes; i++)
+    {
+        ShapeData shape = Shapes[i];
+        int numChildren = shape.numChildren;
+
+        float localDst = GetShapeDistance(shape, samplePoint);
+        float3 localColour = shape.colour;
+
+
+        for (int j = 0; j < numChildren; j++)
+        {
+            ShapeData childShape = Shapes[i + j + 1];
+            float childDst = GetShapeDistance(childShape, samplePoint);
+
+            float4 combined = Combine(localDst, childDst, localColour, childShape.colour, childShape.operation, childShape.blendStrength);
+            localColour = combined.xyz;
+            localDst = combined.w;
+        }
+        i += numChildren; // skip over children in outer loop
+        
+        float4 globalCombined = Combine(globalDst, localDst, globalColour, localColour, shape.operation, shape.blendStrength);
+        globalColour = globalCombined.xyz;
+        globalDst = globalCombined.w;
+    }
+
+    return float4(globalColour, globalDst);
+}
+
+/**
+ * \brief
+ * return the shortest distance from the eyepoint to the scene surface along
+ * the marching direction. If no part of the surface is found between min and max distance,
+ * return max
+ *
+ * \param
+ * eye: the eye point, acting as the origin of the ray
+ *
+ * \return
+ * xyz: color of pixel
+ * w: distance to pixel
+ */
+float4 ClosestPointToSurface(float3 eye, float3 marchingDirection)
+{
+    float depth = MinDst;
+    float3 globalColour = 1;
+    for (int i = 0; i < MaxMarchingSteps; i++)
+    {
+        float4 result = SceneSDF(eye + depth * marchingDirection);
+        if (result.w <= Epsilon)
+        {
+            return float4(result.xyz, depth);
+        }
+        depth += result.w;
+        if (depth >= MaxDst)
+        {
+            return float4(globalColour, MaxDst);
+        }
+    }
+    return float4(globalColour, MaxDst);
+}
+
+float3 EstimateNormal(float3 p)
+{
+	return normalize(float3(
+        SceneSDF(float3(p.x + Epsilon, p.y, p.z)).w - SceneSDF(float3(p.x - Epsilon, p.y, p.z)).w,
+        SceneSDF(float3(p.x, p.y + Epsilon, p.z)).w - SceneSDF(float3(p.x, p.y - Epsilon, p.z)).w,
+        SceneSDF(float3(p.x, p.y, p.z + Epsilon)).w - SceneSDF(float3(p.x, p.y, p.z - Epsilon)).w
+    ));
+}
+
+/**
+ * Lighting contribution of a single point light source via Phong illumination.
+ * 
+ * The vec3 returned is the RGB color of the light's contribution.
+ *
+ * k_a: Ambient color
+ * k_d: Diffuse color
+ * k_s: Specular color
+ * alpha: Shininess coefficient
+ * p: position of point being lit
+ * eye: the position of the camera
+ * lightPos: the position of the light
+ * lightIntensity: color/intensity of the light
+ *
+ * See https://en.wikipedia.org/wiki/Phong_reflection_model#Description
+ */
+float3 PhongContribForLight(float3 k_d, float3 k_s, float alpha, float3 p, float3 eye,
+                          float3 lightPos, float3 lightIntensity, float range)
+{
+    float3 lightDir = lightPos - p;
+
+    //check if point is within range
+    const float sqrDistLight = lightDir.x * lightDir.x + lightDir.y * lightDir.y + lightDir.z * lightDir.z;
+    if (sqrDistLight > range*range)
+	    return float3(0.0, 0.0, 0.0);
+
+    float3 N = EstimateNormal(p);
+    float3 L = normalize(lightDir);
+    float3 V = normalize(eye - p);
+    float3 R = normalize(reflect(-L, N));
+    
+    float dotLN = dot(L, N);
+    float dotRV = dot(R, V);
+    
+	//light not visible from this point on the surface
+    if (dotLN < 0.0)
+	    return float3(0.0, 0.0, 0.0);
+
+    //light reflection in opposite direction as viewer, apply only diffuse component
+    if (dotRV < 0.0)
+	    return lightIntensity * (k_d * dotLN);
+
+    return lightIntensity * (k_d * dotLN + k_s * pow(dotRV, alpha));
+}
+
+//(not used but just a little extra)
+float3 BlinnPhongContribForLight(float3 k_d, float3 k_s, float alpha, float3 p, float3 eye,
+                          float3 lightPos, float3 lightIntensity)
+{
+    float3 N = EstimateNormal(p);
+    float3 lightDir = lightPos - p;
+    float3 L = normalize(lightDir);
+    float3 viewDir = normalize(eye - p);
+    float3 H = normalize(lightDir + viewDir);
+    
+    float NdotL = dot(N, L);
+    float NdotH = dot(N, H);
+
+    //Note to self: apparently there's a lit function that does blinn-phong for you
+    //not sure if its more performant in this case tho
+    return lightIntensity * (k_d + k_s * lit(NdotL, NdotH, alpha));
+}
+
+/**
+ * Lighting via Phong illumination.
+ * 
+ * The vec3 returned is the RGB color of that point after lighting is applied.
+ * k_a: Ambient color
+ * k_d: Diffuse color
+ * k_s: Specular color
+ * alpha: Shininess coefficient
+ * p: position of point being lit
+ * eye: the position of the camera
+ *
+ * See https://en.wikipedia.org/wiki/Phong_reflection_model#Description
+ */
+float3 phongIllumination(float3 k_a, float3 k_d, float alpha, float3 p, float3 eye)
+{
+    float3 color = 0.5 * k_a;
+
+	for (int i=0; i < AmntLights; ++i)
+	{
+	    color += PhongContribForLight(k_d, Lights[i].colour, alpha, p, eye,
+	                                  Lights[i].position,
+	                                  Lights[i].intensity,
+	                                  Lights[i].range);
+    }
+
+    return color;
+}
+
+[numthreads(8,8,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    uint width, height;
+    Result.GetDimensions(width, height);
+
+    Result[id.xy] = Source[id.xy];
+
+    float2 uv = id.xy / float2(width, height) * 2 - 1; //map between [-1, 1]
+
+    Ray ray = CreateCameraRay(uv);
+
+
+    float4 sceneInfo = ClosestPointToSurface(ray.origin, ray.direction);
+    float dst = sceneInfo.w;
+    
+    if (dst > MaxDst - Epsilon) //didn't hit anything
+		return;
+
+	float3 p = ray.origin + dst * ray.direction;
+
+    //float3 K_a = (EstimateNormal(p) + float3(1, 1, 1)) / 2.0;
+    //float3 K_d = K_a;
+
+    float3 K_a = float3(0.1, 0.1, 0.1);
+    float3 K_d = sceneInfo.xyz;
+	float shininess = 20.0;
+
+    float3 color = phongIllumination(K_a, K_d, shininess, p, ray.origin);
+
+    Result[id.xy] = float4(color, 1);
+}
