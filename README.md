@@ -5,9 +5,12 @@ these errors are simply becouse of some project settings and is fairly easy to f
 [error picture]
 In unity to get the size of struct using "sizeof" you have to mark the code as unsafe like so:
 ```cpp
-public static unsafe int GetSize()
+struct ShapeData
 {
-    return sizeof(ShapeData);
+    public static unsafe int GetSize()
+    {
+        return sizeof(ShapeData);
+    }
 }
 ```
 and that exact pice of code is whats causing the error when opening the file for the fist time.
