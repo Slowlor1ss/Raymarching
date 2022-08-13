@@ -4,7 +4,7 @@
  therefore the code isn't my cleanest nor properly optimized, and is more a project made for the fun of it.<br>
  
 - [About raymarching](#About-raymarching)<br>
-- [Code snippets](#Code snippets)<br>
+- [Sphere tracing snippet](#Sphere-Tracing-Snipped)<br>
  
  <details open><summary><i> <h2>How to open</h2> </i> (Click to open/close)</summary>
 
@@ -52,7 +52,8 @@ Instead of incrementing by a tiny step every time, we take the maximum step we k
 <img src="Images/spheretrace-modified.jpg" style=" width:70% ; height:70% "><br>
 Interestingly [GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions#:~:text=8.3%20The%20Distance%2DMapping%20Algorithm) shows how this can be used in distance mapping and also compaires it to raytracing
 
-Wich in my code looks something like this (slightly simplyfied (removed code for the color of the pixel but you can find all code [here](Assets/Scripts/RayMarching/RayMarchingCS.compute))):
+<div id="Sphere-Tracing-Snipped">
+Wich in my code looks something like this: (slightly simplyfied (removed code for the color of the pixel but you can find all code [here](Assets/Scripts/RayMarching/RayMarchingCS.compute)))
 ```HLSL
 //returns the shortest distance from the eyepoint that the ray has to travel
 //to get really close to the object, but if nothing had been found within the view range we just return max
@@ -75,3 +76,10 @@ float ClosestPointToSurface(float3 eye, float3 marchingDirection)
     return MaxDst;
 }
 ```
+ </div>
+ 
+### Shading and normals
+
+Raymarching also has an interesting way of finding surface normals using signed distance functions,
+
+
