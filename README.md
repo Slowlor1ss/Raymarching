@@ -9,7 +9,9 @@
 - [Constructive solid geometry](#Shape-operations)<br>
  
  <details open><summary><i> <h2>How to open</h2> </i> (Click to open/close)</summary>
-
+	
+---
+	
 <br>
 
 To run this project you can simply open the assests folder it in the unity engine.<br>
@@ -32,7 +34,9 @@ You can easly fix this by allowing unsafe code for that project like so:<br><br>
 <img src="Images/UnsafeCodeExplained.png" style=" width:70% ; height:70% "><br>
 After that all errors will be gone and<br>
 I ensure you none of the code is actually "unsafe" ;)<br>
- 
+ 		
+---
+	
  </details>
 
 ## About raymarching
@@ -167,3 +171,20 @@ float4 Blend(float a, float b, float3 colA, float3 colB, float k)
 }
 ```
 
+<br>
+
+***Sources***
+---
+	
+<br>
+	
+https://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/#the-raymarching-algorithm<br>
+https://www.iquilezles.org/www/articles/smin/smin.htm<br>
+https://en.wikipedia.org/wiki/Gradient<br>
+https://en.wikipedia.org/wiki/Constructive_solid_geometry<br>
+http://iquilezles.org/www/articles/distfunctions/distfunctions.htm<br>
+https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions<br>
+
+<br>
+	
+[Back to top](#readme)
