@@ -105,4 +105,63 @@ I think this image from wikipedia is a nice visual explenation of this.
 
 ![csg-wiki](Images/csg-wiki.png)
 
+And this is actually really simple to acheave using ray marching
+
+```HLSL
+    // None
+    if (operation == 0)
+    {
+        if (dstB < dstA)
+        {
+            dst = dstB;
+            colour = colourB;
+        }
+    }
+    // Blend
+    else if (operation == 1)
+    {
+        float4 blend = Blend(dstA, dstB, colourA, colourB, blendStrength);
+        dst = blend.w;
+        colour = blend.xyz;
+    }
+    // Cut
+    else if (operation == 2)
+    {
+        // max(a,-b)
+        if (-dstB > dst)
+        {
+            dst = -dstB;
+            colour = colourB;
+        }
+    }
+    // Mask
+    else if (operation == 3)
+    {
+        // max(a,b)
+        if (dstB > dst)
+        {
+            dst = dstB;
+            colour = colourB;
+        }
+    }
+```
+
+Only the blend has a bit more complex code to both create a nice blend and have a smooth transition between colors
+here's my code snippet but for more information on how it actually works i reccomend [this](https://www.iquilezles.org/www/articles/smin/smin.htm) site that gives a very nice explenation of this.
+
+```HLSL
+float4 Blend(float a, float b, float3 colA, float3 colB, float k)
+{
+    //see mix factor https://www.iquilezles.org/www/articles/smin/smin.htm
+    const float h = max(k - abs(a - b), 0.0) / k;
+    const float m = h * h * 0.5;
+    const float s = m * k * (1.0 / 2.0);
+    float2 result = (a < b) ? float2(a - s, m) : float2(b - s, 1.0 - m);
+
+    float blendDst = result.x;
+    float3 blendCol = lerp(colA, colB, result.y);
+
+    return float4(blendCol, blendDst);
+}
+```
 
