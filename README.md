@@ -83,5 +83,26 @@ float ClosestPointToSurface(float3 eye, float3 marchingDirection)
 ### Shading and normals
 
 Raymarching also has an interesting way of finding surface normals using signed distance functions,
+for finding the nomals something called the [gradient](https://en.wikipedia.org/wiki/Gradient) is used, in simple terms this is a function that tells you at a given point in what direction to move to most rapidly increase the distance from the geometry.
+Using signed distance functions, this gives us a pretty good estimation of our surface normal.
+
+Which again in my code looks like this:
+```HLSL
+float3 EstimateNormal(float3 p)
+{
+	return normalize(float3(
+        SceneSDF(float3(p.x + Epsilon, p.y, p.z)).w - SceneSDF(float3(p.x - Epsilon, p.y, p.z)),
+        SceneSDF(float3(p.x, p.y + Epsilon, p.z)).w - SceneSDF(float3(p.x, p.y - Epsilon, p.z)),
+        SceneSDF(float3(p.x, p.y, p.z + Epsilon)).w - SceneSDF(float3(p.x, p.y, p.z - Epsilon))
+    ));
+}
+```
+### Shape operations
+
+Shape operations as I call them or Constructive solid geometry as a more technical term, is a way of creating complex geometry using boolian operations on wimple shapes simple shapes.
+
+I think this image from wikipedia is a nice visual explenation of this.
+
+![csg-wiki](Images/csg-wiki.png)
 
 
