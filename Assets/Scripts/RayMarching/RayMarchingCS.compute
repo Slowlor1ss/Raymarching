@@ -212,9 +212,8 @@ float4 SceneSDF(float3 samplePoint)
 
 /**
  * \brief
- * return the shortest distance from the eyepoint to the scene surface along
- * the marching direction. If no part of the surface is found between min and max distance,
- * return max
+ * returns the shortest distance from the eyepoint that the ray has to travel
+ * to get really close to the object, but if nothing had been found within the view range we just return max
  *
  * \param
  * eye: the eye point, acting as the origin of the ray
