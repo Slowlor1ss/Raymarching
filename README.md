@@ -1,5 +1,7 @@
 # Raymarching
  
+ This was an experimental project to learn more about raymarching and unity's compute shader<br>
+ therefore the code isn't my cleanest nor properly optimized, and is more a project made for the fun of it.<br>
  
 ## How to open
 
@@ -23,5 +25,7 @@ You can easly fix this by allowing unsafe code for that project like so:<br><br>
 <img src="Images/UnsafeCodeExplained.png" style=" width:70% ; height:70% "><br>
 After that all errors will be gone and<br>
 I ensure you none of the code is actually "unsafe" ;)<br>
+
+## About raymarching
 
 
