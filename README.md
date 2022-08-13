@@ -54,23 +54,24 @@ Interestingly [GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-
 
 Wich in my code looks something like this (slightly simplyfied (removed code for the color of the pixel but you can find all code [here](Assets/Scripts/RayMarching/RayMarchingCS.compute))):
 ```HLSL
-float4 ClosestPointToSurface(float3 eye, float3 marchingDirection)
+//returns the shortest distance from the eyepoint that the ray has to travel
+//to get really close to the object, but if nothing had been found within the view range we just return max
+float ClosestPointToSurface(float3 eye, float3 marchingDirection)
 {
     float depth = MinDst;
-    float3 globalColour = 1;
     for (int i = 0; i < MaxMarchingSteps; i++)
     {
-        float4 result = SceneSDF(eye + depth * marchingDirection);
-        if (result.w <= Epsilon)
+        float result = SceneSDF(eye + depth * marchingDirection);
+        if (result <= Epsilon)
         {
-            return float4(result.xyz, depth);
+            return depth;
         }
-        depth += result.w;
+        depth += result;
         if (depth >= MaxDst)
         {
-            return float4(globalColour, MaxDst);
+            return MaxDst;
         }
     }
-    return float4(globalColour, MaxDst);
+    return MaxDst;
 }
 ```
