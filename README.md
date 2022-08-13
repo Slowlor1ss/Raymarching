@@ -36,3 +36,18 @@ I ensure you none of the code is actually "unsafe" ;)<br>
 ## About raymarching
 
 
+When I started this project I was happly suprised to find out it had a lot of simmeliarities to raytracing, and having made a raytracer in the past made this project go a lot easier.
+
+Just as in raytracing, we have a position for the camera, put a grid in front of it, send rays from that camera position through each point in the grid, with each grid point corresponding to a pixel in the output image.
+
+Now the big difference with raytracing is how we're finding the intersection between the view ray and the scene.
+
+With raytracing we usually have some primitive geometies (like triangle's, spheres, and quats) and do a series of intersection tests seeign when and where the ray intersects with the geometry, if at all.
+
+In raymarching, we use signed distance functions to find intersections between the ray and geometry, just like in raytracing we do this for every pixel but here instead of simply getting a boolian that says that you intersected with the geometry you get a value with the distance from the shape and by inreacing the size of the ray you will get closer and closer to the geometry until the value gets really small and thus you have hit the geometry.
+
+For increasing the size of this ray you could simply increment it by small steps until the distance gets really small, but luckly some clever people have come up with a better and way more optimized way of doing this; called “sphere tracing”. 
+Instead of incrementing by a tiny step every time, we take the maximum step we know is safe without going through the surface; in other words we step by the distance to the surface, which the SDF provides us!
+
+<img src="Images/spheretrace-modified.jpg" style=" width:70% ; height:70% "><br>
+An interesting use case of this ![Here](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions#:~:text=8.3%20The%20Distance%2DMapping%20Algorithm) From the book GPU Gems 2 by nvidia shows how this can be used in distance mapping and also compaires it raytracing
