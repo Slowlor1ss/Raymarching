@@ -7,7 +7,8 @@
 - [Sphere tracing snippet](#Sphere-Tracing-Snipped)<br>
 - [Shading and normals](#Shading-and-normals)<br>
 - [Constructive solid geometry](#Shape-operations)<br>
-- [Sources](#Sources)
+- [My result](#Result)<br>
+- [Sources](#Sources)<br>
  
  <details open><summary><i> <h2>How to open</h2> </i> (Click to open/close)</summary>
 	
@@ -171,6 +172,11 @@ float4 Blend(float a, float b, float3 colA, float3 colB, float k)
     return float4(blendCol, blendDst);
 }
 ```
+
+## Result
+
+![Blending-balls](Images/Balls.gif)
+![Testing-Scene](Images/RayMarching1.png)
 
 <br>
 
