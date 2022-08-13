@@ -7,6 +7,7 @@
 - [Sphere tracing snippet](#Sphere-Tracing-Snipped)<br>
 - [Shading and normals](#Shading-and-normals)<br>
 - [Constructive solid geometry](#Shape-operations)<br>
+- [Sources](#Sources)
  
  <details open><summary><i> <h2>How to open</h2> </i> (Click to open/close)</summary>
 	
