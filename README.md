@@ -3,6 +3,10 @@
  This was an experimental project to learn more about raymarching and unity's compute shader<br>
  therefore the code isn't my cleanest nor properly optimized, and is more a project made for the fun of it.<br>
  
+- [How to open](#How-to-open)<br>
+- [About raymarching](#About-raymarching)<br>
+- [Code snippets](#Code snippets)<br>
+ 
 ## How to open
 
 To run this project you can simply open the assests folder it in the unity engine.<br>
