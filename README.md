@@ -47,7 +47,7 @@ With raytracing we usually have some primitive geometies (like triangle's, spher
 In raymarching, we use signed distance functions to find intersections between the ray and geometry, just like in raytracing we do this for every pixel but here instead of simply getting a boolian that says that you intersected with the geometry you get a value with the distance from the shape and by inreacing the size of the ray you will get closer and closer to the geometry until the value gets really small and thus you have hit the geometry.
 
 For increasing the size of this ray you could simply increment it by small steps until the distance gets really small, but luckly some clever people have come up with a better and way more optimized way of doing this; called “sphere tracing”. 
-Instead of incrementing by a tiny step every time, we take the maximum step we know is safe without going through the surface; in other words we step by the distance to the surface, which the SDF provides us!
+Instead of incrementing by a tiny step every time, we take the maximum step we know is safe without going through the surface; in other words we step by the distance to the surface, which the SDF provides us! (see picture below)
 
 <img src="Images/spheretrace-modified.jpg" style=" width:70% ; height:70% "><br>
-Interestingly ![GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions#:~:text=8.3%20The%20Distance%2DMapping%20Algorithm) shows how this can be used in distance mapping and also compaires it raytracing
+Interestingly ![GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions#:~:text=8.3%20The%20Distance%2DMapping%20Algorithm) shows how this can be used in distance mapping and also compaires it to raytracing
