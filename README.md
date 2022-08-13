@@ -2,6 +2,7 @@
  
  This was an experimental project to learn more about raymarching and unity's compute shader<br>
  therefore the code isn't my cleanest nor properly optimized, and is more a project made for the fun of it.<br>
+ and you'll also see some code from me first testing out unity's compute shader. 
  
 - [About raymarching](#About-raymarching)<br>
 - [Sphere tracing snippet](#Sphere-Tracing-Snipped)<br>
