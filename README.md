@@ -52,7 +52,8 @@ Instead of incrementing by a tiny step every time, we take the maximum step we k
 <img src="Images/spheretrace-modified.jpg" style=" width:70% ; height:70% "><br>
 Interestingly [GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions#:~:text=8.3%20The%20Distance%2DMapping%20Algorithm) shows how this can be used in distance mapping and also compaires it to raytracing
 
-<div id="Sphere-Tracing-Snipped">
+<div id="Sphere-Tracing-Snipped";>
+ 
 Wich in my code looks something like this: (slightly simplyfied (removed code for the color of the pixel but you can find all code [here](Assets/Scripts/RayMarching/RayMarchingCS.compute)))
 ```HLSL
 //returns the shortest distance from the eyepoint that the ray has to travel
@@ -76,6 +77,7 @@ float ClosestPointToSurface(float3 eye, float3 marchingDirection)
     return MaxDst;
 }
 ```
+ 
  </div>
  
 ### Shading and normals
