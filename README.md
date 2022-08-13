@@ -192,6 +192,7 @@ https://en.wikipedia.org/wiki/Gradient<br>
 https://en.wikipedia.org/wiki/Constructive_solid_geometry<br>
 http://iquilezles.org/www/articles/distfunctions/distfunctions.htm<br>
 https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions<br>
+https://www.youtube.com/watch?v=BrZ4pWwkpto<br>
 
 <br>
 	
