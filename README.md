@@ -50,4 +50,4 @@ For increasing the size of this ray you could simply increment it by small steps
 Instead of incrementing by a tiny step every time, we take the maximum step we know is safe without going through the surface; in other words we step by the distance to the surface, which the SDF provides us! (see picture below)
 
 <img src="Images/spheretrace-modified.jpg" style=" width:70% ; height:70% "><br>
-Interestingly ![GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions#:~:text=8.3%20The%20Distance%2DMapping%20Algorithm) shows how this can be used in distance mapping and also compaires it to raytracing
+Interestingly [GPU Gems 2](https://developer.nvidia.com/gpugems/gpugems2/part-i-geometric-complexity/chapter-8-pixel-displacement-mapping-distance-functions#:~:text=8.3%20The%20Distance%2DMapping%20Algorithm) shows how this can be used in distance mapping and also compaires it to raytracing
